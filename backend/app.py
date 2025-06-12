@@ -1,4 +1,4 @@
-# ✅ app.py completo con integración a MySQL y modelo
+# ✅ app.py completo con integración a MySQL y corrección de float32
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 from url_feature_extractor import URLFeatureExtractor
-from db_mysql import guardar_deteccion_mysql  # ⚡ Nueva función
+from db_mysql import guardar_deteccion_mysql
 import time
 
 # Inicializar app
@@ -98,11 +98,13 @@ def predict_from_url(input_data: URLInput):
         fin = time.time()
         tiempo_ms = int((fin - inicio) * 1000)
 
-        # 📉 Guardar en MySQL
+        score = float(round(pred[0] * 100, 2))  # 👈 Conversión a float nativo
+
+        # Guardar en MySQL
         guardar_deteccion_mysql(
             input_data.url,
             "Benigna" if label == 1 else "Phishing",
-            round(pred[0] * 100, 2),
+            score,
             tiempo_ms
         )
 
@@ -118,4 +120,4 @@ def predict_from_url(input_data: URLInput):
 
 @app.get("/")
 def read_root():
-    return {"message": "PhishShield API funcionando correctamente"}
+    return {"message": "PhishShield API funcionando correctamente ✅"}

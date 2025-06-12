@@ -5,11 +5,11 @@ from datetime import datetime
 def guardar_deteccion_mysql(url, resultado, probabilidad, tiempo_ms):
     try:
         conn = mysql.connector.connect(
-            host="mysql-railway.internal",       # ⚠️ HOST de Railway
-            user="root",                         # ⚠️ Usuario de Railway
-            password="msBquYSEmjeIoGWnSVldESZRakntFwrK",  # ⚠️ Contraseña real (visible en Railway)
-            database="railway",                  # ⚠️ Nombre de tu base de datos
-            port=3306                            # ⚠️ Puerto (generalmente 3306)
+            host="mainline.proxy.rlwy.net",
+            user="root",
+            password="msBquYSEmjeIoGWnSVldESZRakntFwrK",
+            database="railway",
+            port=3306
         )
 
         cursor = conn.cursor()
