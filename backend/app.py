@@ -1,4 +1,4 @@
-# ✅ Import required libraries
+# ✅ app.py completo con integración a MySQL y modelo
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -6,12 +6,14 @@ import joblib
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from url_feature_extractor import URLFeatureExtractor  # Custom class to extract features from a raw URL
+from url_feature_extractor import URLFeatureExtractor
+from db_mysql import guardar_deteccion_mysql  # ⚡ Nueva función
+import time
 
-# ✅ Initialize FastAPI app
+# Inicializar app
 app = FastAPI()
 
-# ✅ Enable CORS (Cross-Origin Resource Sharing) to allow frontend to access backend
+# Middleware CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,12 +22,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Load the scaler and XGBoost model
+# Cargar scaler y modelo
 scaler = joblib.load("scaler.pkl")
 booster = xgb.Booster()
 booster.load_model("xgb_model.json")
 
-# ✅ Define the expected feature columns in correct order
+# Columnas esperadas
 FEATURE_COLUMNS = [
     "URLLength", "DomainLength", "TLDLength", "NoOfImage", "NoOfJS", "NoOfCSS",
     "NoOfSelfRef", "NoOfExternalRef", "IsHTTPS", "HasObfuscation", "HasTitle",
@@ -34,7 +36,10 @@ FEATURE_COLUMNS = [
     "LetterToDigitRatio", "Redirect_0", "Redirect_1"
 ]
 
-# ✅ Define input model schema for direct feature input
+# Modelos de entrada
+class URLInput(BaseModel):
+    url: str
+
 class URLFeatures(BaseModel):
     URLLength: int
     DomainLength: int
@@ -59,11 +64,6 @@ class URLFeatures(BaseModel):
     Redirect_0: int
     Redirect_1: int
 
-# ✅ Define input model for raw URL input
-class URLInput(BaseModel):
-    url: str
-
-# ✅ Predict directly from structured features
 @app.post("/predict")
 def predict(features: URLFeatures):
     try:
@@ -72,20 +72,18 @@ def predict(features: URLFeatures):
         dmatrix = xgb.DMatrix(scaled_input, feature_names=FEATURE_COLUMNS)
         pred = booster.predict(dmatrix)
         label = int(round(pred[0]))
-        score = float(pred[0])
 
         return {
             "prediction": label,
-            "score": score,
             "result": "Benigna" if label == 1 else "Maliciosa"
         }
     except Exception as e:
         return {"error": str(e)}
 
-# ✅ Predict from raw URL using feature extractor
 @app.post("/predict_url")
 def predict_from_url(input_data: URLInput):
     try:
+        inicio = time.time()
         extractor = URLFeatureExtractor(input_data.url)
         features = extractor.extract_model_features()
 
@@ -96,20 +94,28 @@ def predict_from_url(input_data: URLInput):
         scaled_input = scaler.transform(input_df)
         dmatrix = xgb.DMatrix(scaled_input, feature_names=FEATURE_COLUMNS)
         pred = booster.predict(dmatrix)
-
         label = int(round(pred[0]))
-        score = float(pred[0])  # 🔥 Probabilidad real del modelo
+        fin = time.time()
+        tiempo_ms = int((fin - inicio) * 1000)
+
+        # 📉 Guardar en MySQL
+        guardar_deteccion_mysql(
+            input_data.url,
+            "Benigna" if label == 1 else "Phishing",
+            round(pred[0] * 100, 2),
+            tiempo_ms
+        )
 
         return {
             "features": features,
             "prediction": label,
-            "score": score,
-            "result": "Benigna" if label == 1 else "Maliciosa"
+            "result": "Benigna" if label == 1 else "Phishing",
+            "score": round(pred[0], 4),
+            "tiempo_ms": tiempo_ms
         }
     except Exception as e:
         return {"error": str(e)}
 
-# ✅ Root endpoint
 @app.get("/")
 def read_root():
-    return {"message": "PhishShield API is running 🚀"}
+    return {"message": "PhishShield API funcionando correctamente"}
