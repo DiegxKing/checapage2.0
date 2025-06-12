@@ -1,14 +1,15 @@
-# backend/db_mysql.py
+# ✅ backend/db_mysql.py - FINAL
 import os
 import mysql.connector
 from datetime import datetime
 from dotenv import load_dotenv
 
-
-load_dotenv()
+load_dotenv()  # Cargar variables del entorno
 
 def guardar_deteccion_mysql(url, resultado, probabilidad, tiempo_ms):
     try:
+        print(f"[📥 GUARDANDO] {url} | {resultado} | {probabilidad}% | {tiempo_ms}ms")
+
         conn = mysql.connector.connect(
             host=os.getenv("MYSQL_HOST"),
             port=int(os.getenv("MYSQL_PORT")),
@@ -31,6 +32,8 @@ def guardar_deteccion_mysql(url, resultado, probabilidad, tiempo_ms):
         conn.commit()
         cursor.close()
         conn.close()
+
+        print("[✅ GUARDADO EN BD]")
 
     except Exception as e:
         print(f"[❌ MySQL Error] {e}")
