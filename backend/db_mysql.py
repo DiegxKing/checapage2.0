@@ -9,7 +9,7 @@ def guardar_deteccion_mysql(url, resultado, probabilidad, tiempo_ms):
             user="root",
             password="msBquYSEmjeIoGWnSVldESZRakntFwrK",
             database="railway",
-            port=3306
+            port=38433
         )
 
         cursor = conn.cursor()
