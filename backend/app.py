@@ -27,10 +27,10 @@ booster.load_model("xgb_model.json")
 
 # ✅ Define the expected feature columns in correct order
 FEATURE_COLUMNS = [
-    "URLLength", "DomainLength", "TLDLength", "NoOfImage", "NoOfJS", "NoOfCSS", 
-    "NoOfSelfRef", "NoOfExternalRef", "IsHTTPS", "HasObfuscation", "HasTitle", 
-    "HasDescription", "HasSubmitButton", "HasSocialNet", "HasFavicon", 
-    "HasCopyrightInfo", "popUpWindow", "Iframe", "Abnormal_URL", 
+    "URLLength", "DomainLength", "TLDLength", "NoOfImage", "NoOfJS", "NoOfCSS",
+    "NoOfSelfRef", "NoOfExternalRef", "IsHTTPS", "HasObfuscation", "HasTitle",
+    "HasDescription", "HasSubmitButton", "HasSocialNet", "HasFavicon",
+    "HasCopyrightInfo", "popUpWindow", "Iframe", "Abnormal_URL",
     "LetterToDigitRatio", "Redirect_0", "Redirect_1"
 ]
 
@@ -67,22 +67,17 @@ class URLInput(BaseModel):
 @app.post("/predict")
 def predict(features: URLFeatures):
     try:
-        # Convert to DataFrame with feature names
         input_df = pd.DataFrame([features.dict()], columns=FEATURE_COLUMNS)
-
-        # Scale using the original scaler
         scaled_input = scaler.transform(input_df)
-
-        # Create DMatrix with feature names
         dmatrix = xgb.DMatrix(scaled_input, feature_names=FEATURE_COLUMNS)
-
-        # Predict
         pred = booster.predict(dmatrix)
         label = int(round(pred[0]))
+        score = float(pred[0])
 
         return {
             "prediction": label,
-            "result": "Legitimate" if label == 1 else "Phishing"
+            "score": score,
+            "result": "Benigna" if label == 1 else "Maliciosa"
         }
     except Exception as e:
         return {"error": str(e)}
@@ -91,28 +86,25 @@ def predict(features: URLFeatures):
 @app.post("/predict_url")
 def predict_from_url(input_data: URLInput):
     try:
-        # Extract features using custom extractor
         extractor = URLFeatureExtractor(input_data.url)
         features = extractor.extract_model_features()
 
         if "error" in features:
             return {"error": features["error"]}
 
-        # Convert to DataFrame to align with expected column names
         input_df = pd.DataFrame([features], columns=FEATURE_COLUMNS)
-
-        # Scale
         scaled_input = scaler.transform(input_df)
-
-        # Predict with DMatrix
         dmatrix = xgb.DMatrix(scaled_input, feature_names=FEATURE_COLUMNS)
         pred = booster.predict(dmatrix)
+
         label = int(round(pred[0]))
+        score = float(pred[0])  # 🔥 Probabilidad real del modelo
 
         return {
             "features": features,
             "prediction": label,
-            "result": "Legitimate" if label == 1 else "Phishing"
+            "score": score,
+            "result": "Benigna" if label == 1 else "Maliciosa"
         }
     except Exception as e:
         return {"error": str(e)}

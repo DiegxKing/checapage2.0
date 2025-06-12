@@ -1,52 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Phishing Detector</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChecaPage</title>
   <link rel="stylesheet" href="styles.css" />
-  <style>
-    .history-entry {
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 4px;
-      background: #f5f5f5;
-    }
-    .history-entry.phishing {
-      border-left: 4px solid #ff4444;
-    }
-    .history-entry.safe {
-      border-left: 4px solid #4CAF50;
-    }
-    .history-entry .url {
-      color: #666;
-      font-size: 12px;
-      word-break: break-all;
-    }
-    .history-entry .time {
-      color: #999;
-      font-size: 11px;
-    }
-    .report-link {
-      color: #ff4444;
-      text-decoration: none;
-      font-size: 12px;
-      margin-left: 5px;
-    }
-    .report-link:hover {
-      text-decoration: underline;
-    }
-  </style>
 </head>
+
 <body>
-  <h3>🔎 Phishing URL Checker</h3>
-  <div id="currentStatus">
-    <div id="loading" style="display:none; margin-top: 10px;">⏳ Scanning...</div>
-    <div id="result" style="margin-top: 10px;"></div>
+  <!-- SWITCH GLOBAL -->
+  <div class="switch-container">
+    <label class="switch">
+      <input type="checkbox" id="pluginToggle" checked />
+      <span class="slider round"></span>
+    </label>
   </div>
 
-  <hr>
-  <h4>📜 Recent Scans</h4>
-  <div id="history"></div>
+  <!-- OVERLAY GLOBAL -->
+  <div id="disabledOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <strong>El plugin se ha desactivado.</strong><br />
+      Actívalo para mantenerte protegido.
+    </div>
+  </div>
+
+  <!-- Pantalla Verde -->
+  <div id="greenScreen" class="screen">
+    <div class="popup-container">
+      <img src="img/icon_checa_page_completo.png" alt="Logo" class="logo" />
+      <img src="img/green_icon.png" alt="Seguro" class="icon-status" />
+      <div class="status-box status-green">
+        <p><strong>La página es segura.</strong><br />
+          No se han detectado riesgos ni amenazas.</p>
+        <p id="proba_ph" style="margin-top: 5px;">Probabilidad: --%</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla Roja -->
+  <div id="redScreen" class="screen">
+    <div class="popup-container">
+      <img src="img/icon_checa_page_completo.png" alt="Logo" class="logo" />
+      <img src="img/red_icon.png" alt="Riesgo" class="icon-status" />
+      <div class="status-box status-red">
+        <p><strong>La página no es segura.</strong><br />
+          Su información podría estar en riesgo.</p>
+        <p id="proba_ph_roja" style="margin-top: 5px;">Probabilidad: --%</p>
+      </div>
+    </div>
+  </div>
 
   <script src="popup.js"></script>
 </body>
