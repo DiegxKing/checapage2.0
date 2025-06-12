@@ -95,16 +95,14 @@ def predict_from_url(input_data: URLInput):
         dmatrix = xgb.DMatrix(scaled_input, feature_names=FEATURE_COLUMNS)
         pred = booster.predict(dmatrix)
         label = int(round(pred[0]))
+        score = float(pred[0])  # 👈 CONVIERTO A float nativo
         fin = time.time()
         tiempo_ms = int((fin - inicio) * 1000)
 
-        score = float(round(pred[0] * 100, 2))  # 👈 Conversión a float nativo
-
-        # Guardar en MySQL
         guardar_deteccion_mysql(
             input_data.url,
             "Benigna" if label == 1 else "Phishing",
-            score,
+            round(score * 100, 2),
             tiempo_ms
         )
 
@@ -112,11 +110,13 @@ def predict_from_url(input_data: URLInput):
             "features": features,
             "prediction": label,
             "result": "Benigna" if label == 1 else "Phishing",
-            "score": round(pred[0], 4),
+            "score": round(score, 4),
             "tiempo_ms": tiempo_ms
         }
+
     except Exception as e:
         return {"error": str(e)}
+
 
 @app.get("/")
 def read_root():
